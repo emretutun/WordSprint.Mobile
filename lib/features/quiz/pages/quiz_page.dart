@@ -170,7 +170,7 @@ class _QuizPageState extends State<QuizPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             DropdownButtonFormField<int>(
-              value: _mode,
+              initialValue: _mode,
               decoration: const InputDecoration(
                 labelText: "Soru Modu",
                 border: OutlineInputBorder(),

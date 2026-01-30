@@ -223,7 +223,7 @@ class _RepeatQuizPageState extends State<RepeatQuizPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             DropdownButtonFormField<int>(
-              value: _mode,
+              initialValue: _mode,
               decoration: const InputDecoration(
                 labelText: "Question Mode",
                 border: OutlineInputBorder(),

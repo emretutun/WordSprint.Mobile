@@ -30,4 +30,9 @@ class ApiClient {
   Map<String, dynamic> decodeJson(http.Response res) {
     return jsonDecode(res.body) as Map<String, dynamic>;
   }
+  Future<http.Response> put(Uri uri, {Object? body}) async {
+  final headers = await _headers();
+  return http.put(uri, headers: headers, body: body);
+}
+
 }

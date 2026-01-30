@@ -2,6 +2,9 @@ import '../../../core/network/api.dart';
 import '../../../core/network/api_client.dart';
 import '../models/profile_response.dart';
 import '../models/profile_stats_response.dart';
+import 'dart:convert';
+import '../models/update_profile_request.dart';
+
 
 
 class ProfileService {
@@ -29,6 +32,20 @@ class ProfileService {
 
   final json = _client.decodeJson(res);
   return ProfileStatsResponse.fromJson(json);
+}
+
+Future<void> updateProfile(UpdateProfileRequest request) async {
+  final uri = Uri.parse(Api.profile);
+
+  final res = await _client.put(
+    uri,
+    body: jsonEncode(request.toJson()),
+  );
+
+  // backend NoContent dönüyor olabilir
+  if (res.statusCode != 204 && res.statusCode != 200) {
+    throw Exception("Update failed: ${res.statusCode} ${res.body}");
+  }
 }
 
 
