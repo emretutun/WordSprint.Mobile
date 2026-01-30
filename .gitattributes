@@ -1,16 +1,17 @@
-# Dart'ı ana dil olarak zorla
+# Dart dosyalarını ana dil olarak zorla
 *.dart linguist-language=Dart
 pubspec.yaml linguist-language=Dart
 
-# Flutter native platformlarını yok say
-android/** linguist-vendored
-ios/** linguist-vendored
-linux/** linguist-vendored
-windows/** linguist-vendored
-macos/** linguist-vendored
-web/** linguist-vendored
+# Flutter native platformları normal şekilde bırak (sayılacak)
+# İstersen burada dilleri belirtebilirsin
+android/** linguist-language=Java
+ios/** linguist-language=Objective-C
+linux/** linguist-language=C++
+windows/** linguist-language=C++
+macos/** linguist-language=Objective-C
+web/** linguist-language=JavaScript
 
-# Build & tooling
+# Build ve tool dosyalarını vendored yap
 build/** linguist-vendored
 **/CMakeLists.txt linguist-vendored
 **/*.cmake linguist-vendored
