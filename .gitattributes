@@ -1,16 +1,22 @@
-# Dart dosyalarını Dart olarak tanı
+# Dart
 *.dart linguist-language=Dart
 pubspec.yaml linguist-language=Dart
 
-# Flutter platform klasörlerini istatistikten çıkar
-android/** linguist-vendored
-ios/** linguist-vendored
-linux/** linguist-vendored
-windows/** linguist-vendored
-macos/** linguist-vendored
-web/** linguist-vendored
-
-# Build / tool dosyaları
+# Build ve tool dosyaları (gizle)
 build/** linguist-vendored
 **/CMakeLists.txt linguist-vendored
 **/*.cmake linguist-vendored
+
+# Generated Android dosyaları gizle
+android/.gradle/** linguist-vendored
+android/build/** linguist-vendored
+
+# Generated iOS dosyaları gizle
+ios/Pods/** linguist-vendored
+ios/Flutter/** linguist-vendored
+ios/build/** linguist-vendored
+
+# Windows / Linux build dosyaları gizle
+windows/build/** linguist-vendored
+linux/build/** linguist-vendored
+macos/build/** linguist-vendored
