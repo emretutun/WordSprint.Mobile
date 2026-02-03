@@ -1,12 +1,8 @@
 class Api {
+  
   // LOCAL
-  static const String _domain = "https://b3f9da73c5b3.ngrok-free.app";
+  static const String _domain = "https://86848b88f520.ngrok-free.app";
   static const String baseUrl = "$_domain/api";
-  // Android emulator için:
-  // localhost = 10.0.2.2
-
-  // Eğer gerçek cihazda test edersen:
-  // static const String baseUrl = "https://192.168.1.XX:7022/api";
 
   // AUTH
   static const String register = "$baseUrl/auth/register";

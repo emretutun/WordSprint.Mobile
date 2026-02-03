@@ -1,5 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'dart:io';
+
+
 
 import '../storage/token_storage.dart';
 
@@ -34,5 +37,23 @@ class ApiClient {
   final headers = await _headers();
   return http.put(uri, headers: headers, body: body);
 }
+Future<http.StreamedResponse> multipartUpload(
+  Uri uri, {
+  required File file,
+  String fieldName = "File",
+}) async {
+  final token = await TokenStorage.getToken();
+
+  final request = http.MultipartRequest("POST", uri);
+
+  if (token != null && token.isNotEmpty) {
+    request.headers["Authorization"] = "Bearer $token";
+  }
+
+  request.files.add(await http.MultipartFile.fromPath(fieldName, file.path));
+
+  return request.send();
+}
+
 
 }

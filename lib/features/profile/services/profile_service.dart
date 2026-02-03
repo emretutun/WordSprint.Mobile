@@ -4,6 +4,8 @@ import '../models/profile_response.dart';
 import '../models/profile_stats_response.dart';
 import 'dart:convert';
 import '../models/update_profile_request.dart';
+import 'dart:io';
+
 
 
 
@@ -46,7 +48,26 @@ Future<void> updateProfile(UpdateProfileRequest request) async {
   if (res.statusCode != 204 && res.statusCode != 200) {
     throw Exception("Update failed: ${res.statusCode} ${res.body}");
   }
+  
 }
+
+Future<void> uploadPhoto(File file) async {
+  final uri = Uri.parse(Api.uploadPhoto);
+
+  final res = await _client.multipartUpload(
+    uri,
+    file: file,
+    fieldName: "File",
+  );
+
+  final body = await res.stream.bytesToString();
+
+  if (res.statusCode != 200) {
+    throw Exception("Photo upload failed: ${res.statusCode} $body");
+  }
+
+}
+
 
 
 }
