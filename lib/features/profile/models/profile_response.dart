@@ -4,7 +4,7 @@ class ProfileResponse {
   final String? firstName;
   final String? lastName;
   final int dailyWordGoal;
-  final String? estimatedLevel;
+  final int level; // 0..5
   final String photoUrl;
 
   ProfileResponse({
@@ -13,7 +13,7 @@ class ProfileResponse {
     required this.firstName,
     required this.lastName,
     required this.dailyWordGoal,
-    required this.estimatedLevel,
+    required this.level,
     required this.photoUrl,
   });
 
@@ -24,7 +24,7 @@ class ProfileResponse {
       firstName: json["firstName"] as String?,
       lastName: json["lastName"] as String?,
       dailyWordGoal: (json["dailyWordGoal"] as num).toInt(),
-      estimatedLevel: json["estimatedLevel"] as String?,
+      level: (json["level"] as num?)?.toInt() ?? 0,
       photoUrl: json["photoUrl"] as String,
     );
   }

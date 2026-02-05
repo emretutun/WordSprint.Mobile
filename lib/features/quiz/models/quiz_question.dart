@@ -1,25 +1,27 @@
 class QuizQuestion {
   final int wordId;
-  final int mode;
+  final int level; 
   final String prompt;
-  final List<String>? choices;
   final String expectedLanguage;
+  final List<String>? choices;
 
   QuizQuestion({
     required this.wordId,
-    required this.mode,
+    required this.level,
     required this.prompt,
-    required this.choices,
     required this.expectedLanguage,
+    this.choices,
   });
 
   factory QuizQuestion.fromJson(Map<String, dynamic> json) {
     return QuizQuestion(
-      wordId: (json["wordId"] as num).toInt(),
-      mode: (json["mode"] as num).toInt(),
-      prompt: json["prompt"] as String,
-      choices: (json["choices"] as List?)?.map((e) => e.toString()).toList(),
-      expectedLanguage: json["expectedLanguage"] as String,
+      wordId: json['wordId'],
+      level: json['level'], // 👈 EKLENDİ
+      prompt: json['prompt'],
+      expectedLanguage: json['expectedLanguage'],
+      choices: json['choices'] == null
+          ? null
+          : List<String>.from(json['choices']),
     );
   }
 }

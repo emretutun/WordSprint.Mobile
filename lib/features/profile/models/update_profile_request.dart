@@ -2,19 +2,23 @@ class UpdateProfileRequest {
   final String? firstName;
   final String? lastName;
   final int? dailyWordGoal;
-  final String? estimatedLevel;
+  final int? level; // 0..5
 
   UpdateProfileRequest({
     this.firstName,
     this.lastName,
     this.dailyWordGoal,
-    this.estimatedLevel,
+    this.level,
   });
 
-  Map<String, dynamic> toJson() => {
-        "firstName": firstName,
-        "lastName": lastName,
-        "dailyWordGoal": dailyWordGoal,
-        "estimatedLevel": estimatedLevel,
-      };
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = {};
+
+    if (firstName != null) data["firstName"] = firstName;
+    if (lastName != null) data["lastName"] = lastName;
+    if (dailyWordGoal != null) data["dailyWordGoal"] = dailyWordGoal;
+    if (level != null) data["level"] = level;
+
+    return data;
+  }
 }

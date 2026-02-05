@@ -1,7 +1,7 @@
 class Api {
   
   // LOCAL
-  static const String _domain = "https://86848b88f520.ngrok-free.app";
+  static const String _domain = "https://16f6-46-2-170-136.ngrok-free.app";
   static const String baseUrl = "$_domain/api";
 
   // AUTH
