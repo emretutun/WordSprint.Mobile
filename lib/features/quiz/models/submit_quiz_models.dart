@@ -1,12 +1,18 @@
 class SubmitAnswer {
   final int wordId;
   final String answer;
+  final int mode; // 👈 EKLENDİ
 
-  SubmitAnswer({required this.wordId, required this.answer});
+  SubmitAnswer({
+    required this.wordId, 
+    required this.answer, 
+    required this.mode // 👈 EKLENDİ
+  });
 
   Map<String, dynamic> toJson() => {
         "wordId": wordId,
         "answer": answer,
+        "mode": mode, // 👈 EKLENDİ
       };
 }
 
@@ -25,22 +31,33 @@ class SubmitQuizRequest {
 class QuizResultItem {
   final int wordId;
   final bool isCorrect;
+
+  final String prompt;
+  final String userAnswer;
   final String correctAnswer;
+  final int level;
 
   QuizResultItem({
     required this.wordId,
     required this.isCorrect,
+    required this.prompt,
+    required this.userAnswer,
     required this.correctAnswer,
+    required this.level,
   });
 
   factory QuizResultItem.fromJson(Map<String, dynamic> json) {
     return QuizResultItem(
       wordId: (json["wordId"] as num).toInt(),
       isCorrect: json["isCorrect"] as bool,
-      correctAnswer: json["correctAnswer"] as String,
+      prompt: (json["prompt"] ?? "") as String,
+      userAnswer: (json["userAnswer"] ?? "") as String,
+      correctAnswer: (json["correctAnswer"] ?? "") as String,
+      level: (json["level"] as num).toInt(),
     );
   }
 }
+
 
 class SubmitQuizResponse {
   final int total;

@@ -1,4 +1,6 @@
 class QuizMode {
+  static const int mixed = 0;
+
   static const int trToEnTyping = 1;
   static const int enToTrTyping = 2;
   static const int trToEnMultipleChoice = 3;
@@ -6,16 +8,18 @@ class QuizMode {
 
   static String label(int mode) {
     switch (mode) {
+      case mixed:
+        return "Karışık (Random)";
       case trToEnTyping:
-        return "TR → EN (Typing)";
+        return "TR → EN (Yazma)";
       case enToTrTyping:
-        return "EN → TR (Typing)";
+        return "EN → TR (Yazma)";
       case trToEnMultipleChoice:
-        return "TR → EN (Multiple Choice)";
+        return "TR → EN (Çoktan Seçmeli)";
       case enToTrMultipleChoice:
-        return "EN → TR (Multiple Choice)";
+        return "EN → TR (Çoktan Seçmeli)";
       default:
-        return "Unknown";
+        return "Karışık (Random)";
     }
   }
 }

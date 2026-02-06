@@ -1,7 +1,7 @@
 class Api {
   
   // LOCAL
-  static const String _domain = "https://16f6-46-2-170-136.ngrok-free.app";
+  static const String _domain = "https://96e4-46-2-170-136.ngrok-free.app";
   static const String baseUrl = "$_domain/api";
 
   // AUTH
@@ -27,4 +27,9 @@ class Api {
   static const String quizSubmit = "$baseUrl/quiz/submit";
   static const String repeatStart = "$baseUrl/quiz/repeat/start";
   static const String repeatSubmit = "$baseUrl/quiz/repeat/submit";
+
+  //LEARBOARD
+  static const String leaderboardTopDays = "$baseUrl/leaderboard/top-days";
+  static const String leaderboardTopLearned = "$baseUrl/leaderboard/top-learned";
+  
 }

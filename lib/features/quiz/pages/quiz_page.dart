@@ -23,7 +23,7 @@ class _QuizPageState extends State<QuizPage> {
   final _answerCtrl = TextEditingController();
   final List<SubmitAnswer> _answers = [];
 
-  int _mode = QuizMode.trToEnTyping;
+  int _mode = QuizMode.mixed;
 
   @override
   void initState() {
@@ -51,13 +51,22 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   void _handleAnswer(String answer) {
+    // 1. Boş cevap kontrolü
     if (answer.trim().isEmpty &&
         (_mode == QuizMode.trToEnTyping || _mode == QuizMode.enToTrTyping)) {
       return;
     }
 
     final q = _questions[_index];
-    _answers.add(SubmitAnswer(wordId: q.wordId, answer: answer.trim()));
+    
+    // 2. Cevabı kaydet ve Mode bilgisini gönder
+    _answers.add(SubmitAnswer(
+      wordId: q.wordId, 
+      answer: answer.trim(),
+      mode: q.mode, // Backend'in doğru cevabı bulması için kritik
+    ));
+
+    // 3. TextField'ı temizle
     _answerCtrl.clear();
 
     if (_index < _questions.length - 1) {
@@ -89,7 +98,7 @@ class _QuizPageState extends State<QuizPage> {
 
   String _levelLabel(int level) {
     const levels = ["A1", "A2", "B1", "B2", "C1", "C2"];
-    return level >= 0 && level < levels.length ? levels[level] : "?";
+    return level >= 0 && level < levels.length ? levels[level] : "A1";
   }
 
   Color _levelColor(int level) {
@@ -110,40 +119,124 @@ class _QuizPageState extends State<QuizPage> {
       barrierDismissible: false,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Center(
-          child: Text("Sprint Tamamlandı! 🏁", 
-            style: TextStyle(fontWeight: FontWeight.w900)),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildResultRow("Doğru", "${result.correct}", Colors.green),
-            const SizedBox(height: 8),
-            _buildResultRow("Yanlış", "${result.wrong}", Colors.red),
-            const Divider(height: 32),
-            Text(
-              "Başarı Oranı: %${result.successRate.toStringAsFixed(0)}",
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+        title: const Center(child: Text("Sprint Tamamlandı! 🏁")),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildResultRow("Doğru", "${result.correct}", Colors.green),
+                _buildResultRow("Yanlış", "${result.wrong}", Colors.red),
+                const Divider(height: 28),
+                Text(
+                  "Başarı Oranı: %${result.successRate.toStringAsFixed(0)}",
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  result.passed ? "TEBRİKLER! 🎉" : "BİRAZ DAHA ÇALIŞMALISIN 💪",
+                  style: TextStyle(
+                    color: result.passed ? Colors.green : Colors.orange,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "Detaylar",
+                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey.shade700),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                ...(result.items as List).map((it) {
+                  final bool ok = it.isCorrect ?? false;
+                  final String prompt = it.prompt ?? "";
+                  final String userAns = it.userAnswer ?? "";
+                  final String correctAns = it.correctAnswer ?? "";
+                  final int lvl = it.level ?? 0;
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: ok ? Colors.green.withValues(alpha: 0.2) : Colors.red.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(ok ? Icons.check_circle : Icons.cancel,
+                                color: ok ? Colors.green : Colors.red, size: 18),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(prompt, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.indigo.withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text(_levelLabel(lvl),
+                                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.indigo)),
+                            )
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text.rich(
+                          TextSpan(
+                            text: "Sen: ",
+                            style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                            children: [
+                              TextSpan(
+                                text: userAns.isEmpty ? "(boş)" : userAns,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: ok ? Colors.green.shade700 : Colors.red.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (!ok)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text.rich(
+                              TextSpan(
+                                text: "Doğru: ",
+                                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                                children: [
+                                  TextSpan(
+                                    text: correctAns,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              result.passed ? "MÜKEMMEL! 🎉" : "DENEMEYE DEVAM 💪",
-              style: TextStyle(
-                color: result.passed ? Colors.green : Colors.orange,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ],
+          ),
         ),
         actions: [
           Center(
             child: TextButton(
               onPressed: () {
-                Navigator.pop(context); // Dialog kapat
-                Navigator.pop(context); // Quiz'den çık
+                Navigator.pop(context); // dialog
+                Navigator.pop(context); // quiz page
               },
-              child: const Text("ANA SAYFAYA DÖN", 
-                style: TextStyle(fontWeight: FontWeight.w900)),
+              child: const Text("TAMAM", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             ),
           )
         ],
@@ -156,8 +249,7 @@ class _QuizPageState extends State<QuizPage> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: const TextStyle(fontSize: 16)),
-        Text(value, 
-          style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 18)),
+        Text(value, style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 18)),
       ],
     );
   }
@@ -170,11 +262,7 @@ class _QuizPageState extends State<QuizPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
+    if (_loading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
     if (_error != null) {
       return Scaffold(
@@ -192,8 +280,11 @@ class _QuizPageState extends State<QuizPage> {
     }
 
     final q = _questions[_index];
-    final bool isChoice = _mode == QuizMode.trToEnMultipleChoice ||
-        _mode == QuizMode.enToTrMultipleChoice;
+    
+    // MIXED MODE DÜZELTMESİ: Eğer mod mixed ise sorunun seçenekleri olup olmadığına bak
+    final bool isChoice = (_mode == QuizMode.trToEnMultipleChoice || 
+                          _mode == QuizMode.enToTrMultipleChoice) || 
+                         (q.choices != null && q.choices!.isNotEmpty);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FD),
@@ -223,14 +314,12 @@ class _QuizPageState extends State<QuizPage> {
     return Row(
       children: [
         Expanded(
-          child: ClipRRect(
+          child: LinearProgressIndicator(
+            value: progress,
+            minHeight: 8,
             borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 8,
-              backgroundColor: Colors.indigo.withValues(alpha: 0.1),
-              color: Colors.indigo,
-            ),
+            backgroundColor: Colors.indigo.withValues(alpha: 0.1),
+            color: Colors.indigo,
           ),
         ),
         const SizedBox(width: 12),
@@ -253,6 +342,7 @@ class _QuizPageState extends State<QuizPage> {
           value: _mode,
           isExpanded: true,
           items: [
+            QuizMode.mixed,
             QuizMode.trToEnTyping,
             QuizMode.enToTrTyping,
             QuizMode.trToEnMultipleChoice,
@@ -369,6 +459,7 @@ class _QuizPageState extends State<QuizPage> {
     return Column(
       children: [
         TextField(
+          key: ValueKey("question_field_$_index"), // Her soruda TextField'ı sıfırlar
           controller: _answerCtrl,
           textAlign: TextAlign.center,
           autofocus: true,

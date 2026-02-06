@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wordsprint/features/leaderboard/pages/leaderboard_page.dart';
 import '../../../core/storage/token_storage.dart';
 import '../../auth/pages/login_page.dart';
 import '../../profile/models/profile_response.dart';
@@ -51,45 +52,36 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _logout() async {
-    await TokenStorage.clearToken();
-    if (!mounted) return;
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginPage()),
+    final bool? confirm = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Çıkış Yap"),
+        content: const Text("Ayrılmak istediğine emin misin?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Vazgeç")),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("Çıkış", style: TextStyle(color: Colors.red))),
+        ],
+      ),
     );
+
+    if (confirm == true) {
+      await TokenStorage.clearToken();
+      if (!mounted) return;
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginPage()));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FD), // Daha ferah bir arka plan
-      appBar: AppBar(
-        title: const Text("WordSprint",
-            style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: -0.5, color: Color(0xFF1E293B))),
-        centerTitle: false,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
-            ),
-            child: IconButton(
-                onPressed: _logout,
-                icon: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 20)),
-          ),
-        ],
-      ),
+      backgroundColor: const Color(0xFFF1F5F9), // Daha modern slate rengi
       body: _buildBody(),
     );
   }
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: Colors.indigo));
+      return const Center(child: CircularProgressIndicator(strokeWidth: 3, color: Colors.indigo));
     }
 
     if (_error != null) {
@@ -97,10 +89,16 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.cloud_off_rounded, color: Colors.indigo, size: 64),
+            const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 70),
             const SizedBox(height: 16),
-            Text("Veriler yüklenemedi", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey[800])),
-            TextButton(onPressed: _load, child: const Text("Yeniden Dene", style: TextStyle(color: Colors.indigo))),
+            const Text("Bağlantı Hatası", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            TextButton.icon(
+              onPressed: _load,
+              icon: const Icon(Icons.refresh),
+              label: const Text("Yeniden Dene"),
+              style: TextButton.styleFrom(foregroundColor: Colors.indigo),
+            ),
           ],
         ),
       );
@@ -108,86 +106,112 @@ class _HomePageState extends State<HomePage> {
 
     return RefreshIndicator(
       onRefresh: _load,
-      color: Colors.indigo,
-      child: ListView(
+      edgeOffset: 100,
+      child: CustomScrollView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        children: [
-          if (_profile != null) _buildEnhancedHeader(_profile!),
-          const SizedBox(height: 25),
-          if (_stats != null) _StatsCard(stats: _stats!),
-          const SizedBox(height: 30),
-          _buildSectionTitle("Bugün Ne Yapıyoruz?"),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              _ActionCard(
-                title: "Öğren",
-                subtitle: "Yeni Kelimeler",
-                icon: Icons.auto_stories_rounded,
-                gradient: const [Color(0xFF6366F1), Color(0xFF4F46E5)],
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LearningPage())),
-              ),
-              const SizedBox(width: 15),
-              _ActionCard(
-                title: "Tekrar Et",
-                subtitle: "Hafızanı Tazele",
-                icon: Icons.psychology_rounded,
-                gradient: const [Color(0xFFF59E0B), Color(0xFFD97706)],
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RepeatPage())),
-              ),
-            ],
+        slivers: [
+          _buildSliverAppBar(),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                if (_profile != null) _buildEnhancedHeader(_profile!),
+                const SizedBox(height: 24),
+                if (_stats != null) _StatsCard(stats: _stats!),
+                const SizedBox(height: 32),
+                _buildSectionTitle("Günlük Görevlerin"),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    _ActionCard(
+                      title: "Öğren",
+                      subtitle: "Yeni Kelimeler",
+                      icon: Icons.auto_stories_rounded,
+                      gradient: const [Color(0xFF4F46E5), Color(0xFF7C3AED)],
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LearningPage())),
+                    ),
+                    const SizedBox(width: 16),
+                    _ActionCard(
+                      title: "Tekrar",
+                      subtitle: "Bilgini Pekiştir",
+                      icon: Icons.psychology_rounded,
+                      gradient: const [Color(0xFFF59E0B), Color(0xFFEA580C)],
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RepeatPage())),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                _buildProfileTile(),
+                const SizedBox(height: 32),
+                _buildFutureFeatureFooter(),
+              ]),
+            ),
           ),
-          const SizedBox(height: 25),
-          _buildProfileTile(),
-          const SizedBox(height: 40),
-          _buildFutureFeatureFooter(),
         ],
       ),
+    );
+  }
+
+  Widget _buildSliverAppBar() {
+    return SliverAppBar(
+      expandedHeight: 80,
+      floating: true,
+      backgroundColor: const Color(0xFFF1F5F9),
+      elevation: 0,
+      centerTitle: false,
+      title: const Text(
+        "WordSprint",
+        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 26, color: Color(0xFF0F172A), letterSpacing: -1),
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 16),
+          child: IconButton(
+            onPressed: _logout,
+            icon: const Icon(Icons.logout_rounded, color: Color(0xFF64748B)),
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildSectionTitle(String title) {
     return Row(
       children: [
-        Container(width: 4, height: 18, decoration: BoxDecoration(color: Colors.indigo, borderRadius: BorderRadius.circular(10))),
-        const SizedBox(width: 8),
-        Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1E293B))),
+        Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF1E293B))),
+        const Spacer(),
+        const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
       ],
     );
   }
 
   Widget _buildEnhancedHeader(ProfileResponse profile) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 15, offset: const Offset(0, 5))],
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white),
+        boxShadow: [BoxShadow(color: Colors.indigo.withValues(alpha: 0.08), blurRadius: 20, offset: const Offset(0, 10))],
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(3),
-            decoration: const BoxDecoration(shape: BoxShape.circle, gradient: LinearGradient(colors: [Colors.indigo, Colors.blueAccent])),
-            child: CircleAvatar(
-              radius: 28,
-              backgroundColor: Colors.white,
-              backgroundImage: profile.photoUrl.isNotEmpty ? NetworkImage(profile.photoUrl) : null,
-              child: profile.photoUrl.isEmpty ? const Icon(Icons.person, color: Colors.indigo) : null,
-            ),
+          CircleAvatar(
+            radius: 30,
+            backgroundColor: Colors.indigo.shade50,
+            backgroundImage: profile.photoUrl.isNotEmpty ? NetworkImage(profile.photoUrl) : null,
+            child: profile.photoUrl.isEmpty ? const Icon(Icons.person_rounded, color: Colors.indigo, size: 30) : null,
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Hoş geldin,", style: TextStyle(color: Colors.grey[500], fontSize: 14, fontWeight: FontWeight.w500)),
-                Text(profile.firstName ?? "Gezgin", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFF1E293B))),
+                Text("İyi günler,", style: TextStyle(color: Colors.blueGrey.shade400, fontSize: 14, fontWeight: FontWeight.w500)),
+                Text(profile.firstName ?? "Gezgin", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
               ],
             ),
           ),
-          const Icon(Icons.notifications_none_rounded, color: Colors.grey),
         ],
       ),
     );
@@ -197,44 +221,51 @@ class _HomePageState extends State<HomePage> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10)],
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)],
       ),
       child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         onTap: () async {
           await Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfilePage()));
           _load();
         },
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: Colors.indigo.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-          child: const Icon(Icons.person_search_rounded, color: Colors.indigo),
+        leading: const CircleAvatar(
+          backgroundColor: Color(0xFFEEF2FF),
+          child: Icon(Icons.settings_suggest_rounded, color: Colors.indigo),
         ),
-        title: const Text("Profil Ayarları", style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-        subtitle: const Text("Hedeflerini ve hesabını yönet", style: TextStyle(fontSize: 12)),
-        trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.grey),
+        title: const Text("Profil ve Ayarlar", style: TextStyle(fontWeight: FontWeight.w700)),
+        subtitle: const Text("Hesap bilgilerini güncelle"),
+        trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
       ),
     );
   }
 
   Widget _buildFutureFeatureFooter() {
-    return Opacity(
-      opacity: 0.5,
+    return InkWell(
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LeaderboardPage())),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.indigo.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.indigo.withValues(alpha: 0.1)),
+          gradient: LinearGradient(colors: [Colors.indigo.shade900, const Color(0xFF1E293B)]),
+          borderRadius: BorderRadius.circular(24),
         ),
         child: Column(
           children: [
-            const Icon(Icons.auto_awesome_rounded, color: Colors.indigo, size: 24),
-            const SizedBox(height: 8),
-            const Text("YAKINDA", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 2, color: Colors.indigo)),
+            const Icon(Icons.stars_rounded, color: Colors.amber, size: 32),
+            const SizedBox(height: 12),
+            const Text("REKABETE KATIL", style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
             const SizedBox(height: 4),
-            const Text("Liderlik Tablosu • Düello Modu • Rozetler", textAlign: TextAlign.center, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+            const Text(
+              "Liderlik Tablosu & Başarımlar",
+              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(color: Colors.white12, borderRadius: BorderRadius.circular(20)),
+              child: const Text("Liderlik Tablosuna Git!", style: TextStyle(color: Colors.white54, fontSize: 11)),
+            )
           ],
         ),
       ),
@@ -254,29 +285,25 @@ class _ActionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: GestureDetector(
+      child: InkWell(
         onTap: onTap,
+        borderRadius: BorderRadius.circular(28),
         child: Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             gradient: LinearGradient(colors: gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(28),
             boxShadow: [
-              BoxShadow(color: gradient.last.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6)),
+              BoxShadow(color: gradient.last.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8)),
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12)),
-                child: Icon(icon, size: 28, color: Colors.white),
-              ),
-              const SizedBox(height: 16),
-              Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white)),
-              const SizedBox(height: 2),
-              Text(subtitle, style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.8), fontWeight: FontWeight.w500)),
+              Icon(icon, size: 32, color: Colors.white),
+              const SizedBox(height: 20),
+              Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+              Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8))),
             ],
           ),
         ),
@@ -294,32 +321,33 @@ class _StatsCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B), // Koyu modern tema
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: const Color(0xFF1E293B).withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 10))],
+        color: const Color(0xFF0F172A),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 25, offset: const Offset(0, 10))],
       ),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _statItem("Öğrenilen", stats.totalLearned.toString(), const Color(0xFF4ADE80)),
-              _statItem("Süreçte", stats.totalLearning.toString(), const Color(0xFF60A5FA)),
-              _statItem("Başarı", "%${stats.successRate.toStringAsFixed(0)}", const Color(0xFFFBBF24)),
+              _statItem("Tamamlanan", stats.totalLearned.toString(), const Color(0xFF2DD4BF)),
+              _statItem("Devam Eden", stats.totalLearning.toString(), const Color(0xFF60A5FA)),
+              _statItem("Başarı %", stats.successRate.toStringAsFixed(0), const Color(0xFFF87171)),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12)),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(20)),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.local_fire_department_rounded, color: Colors.orange, size: 18),
-                const SizedBox(width: 8),
-                Text(
-                  "Bugün ${stats.todayLearned} kelime kazandın!",
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white),
+                const Icon(Icons.bolt_rounded, color: Colors.amber, size: 24),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    "Bugün tam ${stats.todayLearned} kelimeyi hafızana attın!",
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
+                  ),
                 ),
               ],
             ),
@@ -332,9 +360,9 @@ class _StatsCard extends StatelessWidget {
   Widget _statItem(String label, String value, Color color) {
     return Column(
       children: [
-        Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: color)),
-        const SizedBox(height: 4),
-        Text(label, style: TextStyle(fontSize: 11, color: Colors.grey[400], fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+        Text(value, style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: color)),
+        const SizedBox(height: 6),
+        Text(label, style: const TextStyle(fontSize: 11, color: Colors.white54, fontWeight: FontWeight.w500)),
       ],
     );
   }

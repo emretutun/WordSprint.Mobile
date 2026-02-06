@@ -19,7 +19,9 @@ class _RepeatQuizPageState extends State<RepeatQuizPage> {
   int _index = 0;
   final _answerCtrl = TextEditingController();
   final List<SubmitAnswer> _answers = [];
-  int _mode = QuizMode.enToTrTyping;
+  
+  // Mixed (Karışık) Mod artık default
+  int _mode = QuizMode.mixed;
 
   @override
   void initState() {
@@ -46,10 +48,19 @@ class _RepeatQuizPageState extends State<RepeatQuizPage> {
   }
 
   void _handleAnswer(String answer) {
-    if (answer.trim().isEmpty && !_mode.toString().contains('Choice')) return;
-
     final q = _questions[_index];
-    _answers.add(SubmitAnswer(wordId: q.wordId, answer: answer.trim()));
+    
+    // Yazma modunda boş cevap kontrolü
+    bool isTypingMode = q.choices == null || q.choices!.isEmpty;
+    if (isTypingMode && answer.trim().isEmpty) return;
+
+    // Cevabı ekle ve o sorunun kendi modunu gönder
+    _answers.add(SubmitAnswer(
+      wordId: q.wordId, 
+      answer: answer.trim(),
+      mode: q.mode // Karışık modda her soru kendi modunu taşır
+    ));
+    
     _answerCtrl.clear();
 
     if (_index < _questions.length - 1) {
@@ -80,135 +91,113 @@ class _RepeatQuizPageState extends State<RepeatQuizPage> {
       barrierDismissible: false,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        title: const Column(
-          children: [
-            Icon(Icons.auto_awesome, color: Colors.orange, size: 48),
-            SizedBox(height: 16),
-            Text("Hafıza Tazelendi!", textAlign: TextAlign.center),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildResultRow("Doğru", "${result.correct}", Colors.green),
-            _buildResultRow("Yanlış", "${result.wrong}", Colors.red),
-            const Divider(height: 32),
-            Text(
-              "%${result.successRate.toStringAsFixed(0)} Başarı",
-              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 24, color: Colors.orange),
+        title: const Center(child: Text("Hafıza Tazelendi! 🏁")),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildResultRow("Doğru", "${result.correct}", Colors.green),
+                _buildResultRow("Yanlış", "${result.wrong}", Colors.red),
+                const Divider(height: 28),
+                Text(
+                  "%${result.successRate.toStringAsFixed(0)} Başarı Oranı",
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+                const SizedBox(height: 18),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text("Detaylar", style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+                const SizedBox(height: 10),
+                
+                ...(result.items as List).map((it) {
+                  final bool ok = it.isCorrect ?? false;
+                  final String prompt = it.prompt ?? "Kelime";
+                  final String userAns = it.userAnswer ?? "";
+                  final String correctAns = it.correctAnswer ?? "";
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: ok ? Colors.green.withOpacity(0.2) : Colors.red.withOpacity(0.2)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(ok ? Icons.check_circle : Icons.cancel, color: ok ? Colors.green : Colors.red, size: 18),
+                            const SizedBox(width: 8),
+                            Expanded(child: Text(prompt, style: const TextStyle(fontWeight: FontWeight.bold))),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text("Sen: ${userAns.isEmpty ? "(boş)" : userAns}", 
+                             style: TextStyle(color: ok ? Colors.green.shade700 : Colors.red.shade700, fontSize: 13)),
+                        if (!ok) Text("Doğru: $correctAns", 
+                             style: const TextStyle(color: Colors.black87, fontSize: 13, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ],
             ),
-          ],
+          ),
         ),
         actions: [
           Center(
             child: ElevatedButton(
               onPressed: () { Navigator.pop(context); Navigator.pop(context); },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-              ),
-              child: const Text("ANA SAYFAYA DÖN", style: TextStyle(fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
+              child: const Text("TAMAM"),
             ),
           ),
-          const SizedBox(height: 8),
         ],
       ),
     );
   }
 
   Widget _buildResultRow(String label, String value, Color color) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-          Text(value, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 20)),
-        ],
-      ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label),
+        Text(value, style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 18)),
+      ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
     if (_loading) return const Scaffold(body: Center(child: CircularProgressIndicator(color: Colors.orange)));
-
     if (_error != null || _questions.isEmpty) return _buildErrorOrEmpty();
 
     final q = _questions[_index];
-    final bool isMultipleChoice = _mode == QuizMode.trToEnMultipleChoice || _mode == QuizMode.enToTrMultipleChoice;
+    
+    // Sorunun kendi içinde choices varsa Çoktan Seçmeli gösterir
+    final bool isMultipleChoice = (q.choices != null && q.choices!.isNotEmpty);
 
     return Scaffold(
       backgroundColor: const Color(0xFFFDFCFB),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.black54),
-          onPressed: () => Navigator.pop(context),
-        ),
         title: _buildProgressHeader(),
-        centerTitle: true,
       ),
       body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
             _buildModeSelector(),
             const SizedBox(height: 32),
-            
-            // Soru Kartı
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 32),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.orange.shade400, Colors.orange.shade600],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(32),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.orange.withValues(alpha: 0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      q.expectedLanguage.toUpperCase(), 
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 1.5),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    q.prompt,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w900, color: Colors.white),
-                  ),
-                ],
-              ),
-            ),
-            
+            _buildQuestionCard(q),
             const SizedBox(height: 48),
-            
-            // Cevap Alanı
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: isMultipleChoice ? _buildMultipleChoice(q) : _buildTypingArea(),
-            ),
+            isMultipleChoice ? _buildMultipleChoice(q) : _buildTypingArea(),
           ],
         ),
       ),
@@ -217,27 +206,11 @@ class _RepeatQuizPageState extends State<RepeatQuizPage> {
 
   Widget _buildProgressHeader() {
     double progress = (_index + 1) / _questions.length;
-    return Container(
-      width: 200,
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: progress,
-              backgroundColor: Colors.orange.withValues(alpha: 0.1),
-              color: Colors.orange,
-              minHeight: 10,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            "${_index + 1} / ${_questions.length}", 
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.orange),
-          ),
-        ],
-      ),
+    return LinearProgressIndicator(
+      value: progress, 
+      backgroundColor: Colors.orange.withOpacity(0.1), 
+      color: Colors.orange,
+      minHeight: 6,
     );
   }
 
@@ -246,37 +219,61 @@ class _RepeatQuizPageState extends State<RepeatQuizPage> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.white, 
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10)],
+        borderRadius: BorderRadius.circular(16), 
+        border: Border.all(color: Colors.orange.withOpacity(0.2))
       ),
-      child: DropdownButton<int>(
-        value: _mode,
-        isExpanded: true,
-        underline: const SizedBox(),
-        icon: const Icon(Icons.tune_rounded, color: Colors.orange),
-        items: [QuizMode.trToEnTyping, QuizMode.enToTrTyping, QuizMode.trToEnMultipleChoice, QuizMode.enToTrMultipleChoice]
-            .map((m) => DropdownMenuItem(value: m, child: Text(QuizMode.label(m), style: const TextStyle(fontWeight: FontWeight.w600)))).toList(),
-        onChanged: (v) { if (v != null) { setState(() => _mode = v); _start(); } },
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          value: _mode,
+          isExpanded: true,
+          items: [
+            QuizMode.mixed,
+            QuizMode.trToEnTyping,
+            QuizMode.enToTrTyping,
+            QuizMode.trToEnMultipleChoice,
+            QuizMode.enToTrMultipleChoice,
+          ].map((m) => DropdownMenuItem(value: m, child: Text(QuizMode.label(m)))).toList(),
+          onChanged: (v) { if (v != null) { setState(() => _mode = v); _start(); } },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuestionCard(QuizQuestion q) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 32),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [Colors.orange.shade400, Colors.orange.shade600]),
+        borderRadius: BorderRadius.circular(32),
+      ),
+      child: Column(
+        children: [
+          Text(q.expectedLanguage.toUpperCase(), 
+               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1.5)),
+          const SizedBox(height: 16),
+          Text(q.prompt, textAlign: TextAlign.center, 
+               style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white)),
+        ],
       ),
     );
   }
 
   Widget _buildMultipleChoice(QuizQuestion q) {
     return Column(
-      key: ValueKey("choice_$_index"),
       children: (q.choices ?? []).map((c) => Padding(
         padding: const EdgeInsets.only(bottom: 16),
         child: SizedBox(
           width: double.infinity,
-          height: 64,
+          height: 60,
           child: ElevatedButton(
             onPressed: () => _handleAnswer(c),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.orange.shade800,
+              backgroundColor: Colors.white, 
+              foregroundColor: Colors.orange, 
               elevation: 0,
-              side: BorderSide(color: Colors.orange.withValues(alpha: 0.1), width: 2),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              side: BorderSide(color: Colors.orange.withOpacity(0.1), width: 2),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             ),
             child: Text(c, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           ),
@@ -287,58 +284,33 @@ class _RepeatQuizPageState extends State<RepeatQuizPage> {
 
   Widget _buildTypingArea() {
     return Column(
-      key: ValueKey("typing_$_index"),
       children: [
         TextField(
+          key: ValueKey("repeat_field_$_index"),
           controller: _answerCtrl,
           autofocus: true,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Color(0xFF2D3142)),
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           decoration: InputDecoration(
             hintText: "Cevabın nedir?",
-            hintStyle: TextStyle(color: Colors.grey.shade300),
             filled: true,
             fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(24), 
-              borderSide: BorderSide(color: Colors.orange.withValues(alpha: 0.1), width: 2),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(24), 
-              borderSide: BorderSide(color: Colors.orange.withValues(alpha: 0.1), width: 2),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(24), 
-              borderSide: const BorderSide(color: Colors.orange, width: 2),
-            ),
-            contentPadding: const EdgeInsets.all(28),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
           ),
           onSubmitted: (val) => _handleAnswer(val),
         ),
         const SizedBox(height: 32),
         SizedBox(
           width: double.infinity,
-          height: 64,
+          height: 60,
           child: ElevatedButton(
             onPressed: () => _handleAnswer(_answerCtrl.text),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              elevation: 8,
-              shadowColor: Colors.orange.withValues(alpha: 0.4),
+              backgroundColor: Colors.orange, 
+              foregroundColor: Colors.white, 
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  _index == _questions.length - 1 ? "TAMAMLA" : "SIRADAKİ",
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 1.2),
-                ),
-                const SizedBox(width: 8),
-                const Icon(Icons.arrow_forward_rounded),
-              ],
-            ),
+            child: const Text("SIRADAKİ", style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.1)),
           ),
         ),
       ],
@@ -346,30 +318,17 @@ class _RepeatQuizPageState extends State<RepeatQuizPage> {
   }
 
   Widget _buildErrorOrEmpty() {
-    return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.sentiment_dissatisfied_rounded, size: 80, color: Colors.orange),
-              const SizedBox(height: 24),
-              Text(
-                _error ?? "Henüz tekrar edilecek kelime yok.",
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: _start, 
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-                child: const Text("Yeniden Dene"),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+    return Scaffold(body: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+      const Icon(Icons.sentiment_dissatisfied, size: 64, color: Colors.orange),
+      const SizedBox(height: 16),
+      Text(_error ?? "Tekrar edilecek kelime bulunamadı."),
+      TextButton(onPressed: _start, child: const Text("Yeniden Dene"))
+    ])));
+  }
+
+  @override
+  void dispose() {
+    _answerCtrl.dispose();
+    super.dispose();
   }
 }
