@@ -1,7 +1,7 @@
 class Api {
   
   // LOCAL
-  static const String _domain = "https://96e4-46-2-170-136.ngrok-free.app";
+  static const String _domain = "https://a968-46-2-170-136.ngrok-free.app";
   static const String baseUrl = "$_domain/api";
 
   // AUTH
@@ -11,6 +11,9 @@ class Api {
   static const String forgotPassword = "$baseUrl/auth/forgot-password";
   static const String resetPassword = "$baseUrl/auth/reset-password";
   static const String changePassword = "$baseUrl/auth/change-password";
+  static const String forgotPasswordCode = "$baseUrl/auth/forgot-password-code";
+  static const String verifyResetCode = "$baseUrl/auth/verify-reset-code";
+  static const String resetPasswordWithCode = "$baseUrl/auth/reset-password-with-code";
 
   // PROFILE
   static const String profile = "$baseUrl/profile";

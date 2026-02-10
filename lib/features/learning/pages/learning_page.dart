@@ -140,7 +140,7 @@ class _LearningPageState extends State<LearningPage> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            // shadow rengi için withValues kullanımı
+            
             color: Colors.indigo.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
@@ -173,7 +173,7 @@ class _LearningPageState extends State<LearningPage> {
             icon: const Icon(Icons.play_circle_fill_rounded, size: 22),
             label: const Text("QUIZ'E BAŞLA", style: TextStyle(fontWeight: FontWeight.w800)),
             style: OutlinedButton.styleFrom(
-              // border rengi için alpha kullanımı
+              
               side: BorderSide(color: Colors.white.withValues(alpha: 0.24), width: 2),
               foregroundColor: Colors.white,
               minimumSize: const Size(double.infinity, 56),

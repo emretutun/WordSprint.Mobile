@@ -16,7 +16,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _firstCtrl = TextEditingController();
   final _lastCtrl = TextEditingController();
   bool _loading = false;
-  String? _error; // Artık UI'da kullanıyoruz
+  String? _error; 
 
   @override
   void dispose() {
@@ -92,7 +92,7 @@ class _RegisterPageState extends State<RegisterPage> {
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 children: [
-                  // Hata Mesajı Gösterimi (Linter uyarısını çözen kısım)
+                  
                   if (_error != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16),

@@ -8,6 +8,9 @@ import '../models/auth_response.dart';
 import '../models/register_request.dart';
 import '../models/forgot_password_request.dart';
 import '../models/reset_password_request.dart';
+import '../models/forgot_password_code_request.dart';
+import '../models/verify_reset_code_request.dart';
+import '../models/reset_password_with_code_request.dart';
 
 
 class AuthService {
@@ -91,6 +94,48 @@ Future<void> changePassword(ChangePasswordRequest request) async {
 
   if (res.statusCode != 200) {
     throw Exception("Change password failed: ${res.statusCode} ${res.body}");
+  }
+}
+
+Future<void> forgotPasswordCode(ForgotPasswordCodeRequest request) async {
+  final uri = Uri.parse(Api.forgotPasswordCode);
+
+  final res = await http.post(
+    uri,
+    headers: {"Content-Type": "application/json"},
+    body: jsonEncode(request.toJson()),
+  );
+
+  if (res.statusCode != 200) {
+    throw Exception("Forgot password code failed: ${res.statusCode} ${res.body}");
+  }
+}
+
+Future<void> verifyResetCode(VerifyResetCodeRequest request) async {
+  final uri = Uri.parse(Api.verifyResetCode);
+
+  final res = await http.post(
+    uri,
+    headers: {"Content-Type": "application/json"},
+    body: jsonEncode(request.toJson()),
+  );
+
+  if (res.statusCode != 200) {
+    throw Exception("Verify reset code failed: ${res.statusCode} ${res.body}");
+  }
+}
+
+Future<void> resetPasswordWithCode(ResetPasswordWithCodeRequest request) async {
+  final uri = Uri.parse(Api.resetPasswordWithCode);
+
+  final res = await http.post(
+    uri,
+    headers: {"Content-Type": "application/json"},
+    body: jsonEncode(request.toJson()),
+  );
+
+  if (res.statusCode != 200) {
+    throw Exception("Reset password with code failed: ${res.statusCode} ${res.body}");
   }
 }
 

@@ -1,18 +1,18 @@
 class SubmitAnswer {
   final int wordId;
   final String answer;
-  final int mode; // 👈 EKLENDİ
+  final int mode;
 
   SubmitAnswer({
     required this.wordId, 
     required this.answer, 
-    required this.mode // 👈 EKLENDİ
+    required this.mode 
   });
 
   Map<String, dynamic> toJson() => {
         "wordId": wordId,
         "answer": answer,
-        "mode": mode, // 👈 EKLENDİ
+        "mode": mode, 
       };
 }
 

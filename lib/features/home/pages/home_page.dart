@@ -45,7 +45,14 @@ class _HomePageState extends State<HomePage> {
         });
       }
     } catch (e) {
-      if (mounted) setState(() => _error = e.toString());
+      final errorMsg = e.toString();
+      if (mounted) {
+        setState(() => _error = errorMsg);
+        
+        if (errorMsg.contains('401')) {
+          await TokenStorage.clearToken();
+        }
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -59,22 +66,33 @@ class _HomePageState extends State<HomePage> {
         content: const Text("Ayrılmak istediğine emin misin?"),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("Vazgeç")),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("Çıkış", style: TextStyle(color: Colors.red))),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true), 
+            child: const Text("Çıkış", style: TextStyle(color: Colors.red))
+          ),
         ],
       ),
     );
 
     if (confirm == true) {
       await TokenStorage.clearToken();
-      if (!mounted) return;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginPage()));
+      _navigateToLogin();
     }
+  }
+
+  void _navigateToLogin() {
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context, 
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+      (route) => false, 
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9), // Daha modern slate rengi
+      backgroundColor: const Color(0xFFF1F5F9),
       body: _buildBody(),
     );
   }
@@ -85,21 +103,55 @@ class _HomePageState extends State<HomePage> {
     }
 
     if (_error != null) {
+      final isAuthError = _error!.contains('401') || _error!.toLowerCase().contains('unauthorized');
+
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 70),
-            const SizedBox(height: 16),
-            const Text("Bağlantı Hatası", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            TextButton.icon(
-              onPressed: _load,
-              icon: const Icon(Icons.refresh),
-              label: const Text("Yeniden Dene"),
-              style: TextButton.styleFrom(foregroundColor: Colors.indigo),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 40),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                isAuthError ? Icons.lock_clock_rounded : Icons.error_outline_rounded, 
+                color: Colors.redAccent, 
+                size: 70
+              ),
+              const SizedBox(height: 16),
+              Text(
+                isAuthError ? "Oturum Süresi Doldu" : "Bağlantı Hatası", 
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                isAuthError 
+                  ? "Güvenliğin için tekrar giriş yapman gerekiyor." 
+                  : "Veriler alınırken bir sorun oluştu.",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 24),
+              if (isAuthError)
+                ElevatedButton.icon(
+                  onPressed: _navigateToLogin,
+                  icon: const Icon(Icons.login_rounded),
+                  label: const Text("Tekrar Giriş Yap"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.indigo,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                )
+              else
+                TextButton.icon(
+                  onPressed: _load,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text("Yeniden Dene"),
+                  style: TextButton.styleFrom(foregroundColor: Colors.indigo),
+                ),
+            ],
+          ),
         ),
       );
     }
@@ -152,6 +204,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  
   Widget _buildSliverAppBar() {
     return SliverAppBar(
       expandedHeight: 80,
@@ -191,7 +244,6 @@ class _HomePageState extends State<HomePage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white),
         boxShadow: [BoxShadow(color: Colors.indigo.withValues(alpha: 0.08), blurRadius: 20, offset: const Offset(0, 10))],
       ),
       child: Row(

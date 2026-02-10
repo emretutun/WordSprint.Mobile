@@ -15,7 +15,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _emailCtrl = TextEditingController();
   bool _loading = false;
 
-  // Bellek sızıntısını önlemek için controller'ı temizliyoruz
   @override
   void dispose() {
     _emailCtrl.dispose();
@@ -87,7 +86,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     );
   }
 
-  // Mantığı ayrı bir metoda almak kodu daha okunabilir kılar
   Future<void> _handleForgotPassword() async {
     setState(() => _loading = true);
 
@@ -96,7 +94,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         ForgotPasswordRequest(email: _emailCtrl.text.trim()),
       );
 
-      // ASYNC GAP KONTROLÜ: Widget ağaçtan ayrıldıysa navigasyon yapma
       if (!mounted) return;
 
       Navigator.push(
@@ -104,14 +101,12 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         MaterialPageRoute(builder: (_) => const ResetPasswordPage()),
       );
     } catch (e) {
-      // ASYNC GAP KONTROLÜ: Hata mesajı göstermeden önce de kontrol şart
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
       );
     } finally {
-      // Widget hala ekrandaysa loading'i kapat
       if (mounted) {
         setState(() => _loading = false);
       }

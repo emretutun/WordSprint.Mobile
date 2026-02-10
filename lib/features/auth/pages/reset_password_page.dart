@@ -40,7 +40,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         const SnackBar(content: Text("Password reset ✅ You can login now.")),
       );
 
-      Navigator.popUntil(context, (r) => r.isFirst); // login'e dön
+      Navigator.popUntil(context, (r) => r.isFirst); 
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {

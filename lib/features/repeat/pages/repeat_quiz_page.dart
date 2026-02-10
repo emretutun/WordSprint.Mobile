@@ -20,7 +20,6 @@ class _RepeatQuizPageState extends State<RepeatQuizPage> {
   final _answerCtrl = TextEditingController();
   final List<SubmitAnswer> _answers = [];
   
-  // Mixed (Karışık) Mod artık default
   int _mode = QuizMode.mixed;
 
   @override
@@ -50,15 +49,13 @@ class _RepeatQuizPageState extends State<RepeatQuizPage> {
   void _handleAnswer(String answer) {
     final q = _questions[_index];
     
-    // Yazma modunda boş cevap kontrolü
     bool isTypingMode = q.choices == null || q.choices!.isEmpty;
     if (isTypingMode && answer.trim().isEmpty) return;
 
-    // Cevabı ekle ve o sorunun kendi modunu gönder
     _answers.add(SubmitAnswer(
       wordId: q.wordId, 
       answer: answer.trim(),
-      mode: q.mode // Karışık modda her soru kendi modunu taşır
+      mode: q.mode 
     ));
     
     _answerCtrl.clear();
@@ -112,6 +109,7 @@ class _RepeatQuizPageState extends State<RepeatQuizPage> {
                 ),
                 const SizedBox(height: 10),
                 
+                // GÜNCELLEME: toList() kaldırıldı (Spread operator için gereksiz)
                 ...(result.items as List).map((it) {
                   final bool ok = it.isCorrect ?? false;
                   final String prompt = it.prompt ?? "Kelime";
@@ -124,7 +122,12 @@ class _RepeatQuizPageState extends State<RepeatQuizPage> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: ok ? Colors.green.withOpacity(0.2) : Colors.red.withOpacity(0.2)),
+                      border: Border.all(
+                        // GÜNCELLEME: withValues kullanımı
+                        color: ok 
+                          ? Colors.green.withValues(alpha: 0.2) 
+                          : Colors.red.withValues(alpha: 0.2)
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -144,7 +147,7 @@ class _RepeatQuizPageState extends State<RepeatQuizPage> {
                       ],
                     ),
                   );
-                }).toList(),
+                }),
               ],
             ),
           ),
@@ -178,8 +181,6 @@ class _RepeatQuizPageState extends State<RepeatQuizPage> {
     if (_error != null || _questions.isEmpty) return _buildErrorOrEmpty();
 
     final q = _questions[_index];
-    
-    // Sorunun kendi içinde choices varsa Çoktan Seçmeli gösterir
     final bool isMultipleChoice = (q.choices != null && q.choices!.isNotEmpty);
 
     return Scaffold(
@@ -208,7 +209,8 @@ class _RepeatQuizPageState extends State<RepeatQuizPage> {
     double progress = (_index + 1) / _questions.length;
     return LinearProgressIndicator(
       value: progress, 
-      backgroundColor: Colors.orange.withOpacity(0.1), 
+      // GÜNCELLEME: withValues kullanımı
+      backgroundColor: Colors.orange.withValues(alpha: 0.1), 
       color: Colors.orange,
       minHeight: 6,
     );
@@ -220,7 +222,8 @@ class _RepeatQuizPageState extends State<RepeatQuizPage> {
       decoration: BoxDecoration(
         color: Colors.white, 
         borderRadius: BorderRadius.circular(16), 
-        border: Border.all(color: Colors.orange.withOpacity(0.2))
+        // GÜNCELLEME: withValues kullanımı
+        border: Border.all(color: Colors.orange.withValues(alpha: 0.2))
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<int>(
@@ -272,7 +275,8 @@ class _RepeatQuizPageState extends State<RepeatQuizPage> {
               backgroundColor: Colors.white, 
               foregroundColor: Colors.orange, 
               elevation: 0,
-              side: BorderSide(color: Colors.orange.withOpacity(0.1), width: 2),
+              // GÜNCELLEME: withValues kullanımı
+              side: BorderSide(color: Colors.orange.withValues(alpha: 0.1), width: 2),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             ),
             child: Text(c, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),

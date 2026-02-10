@@ -61,7 +61,7 @@ class _RepeatPageState extends State<RepeatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFDFCFB), // Çok hafif sıcak beyaz
+      backgroundColor: const Color(0xFFFDFCFB), 
       appBar: AppBar(
         title: const Text("Hafıza Merkezi", 
           style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: -0.5)),
@@ -121,7 +121,7 @@ class _RepeatPageState extends State<RepeatPage> {
     );
   }
 
-  // Dropdown yerine modern yatay filtre (Chip)
+  
   Widget _buildHorizontalLevelFilter() {
     return SizedBox(
       height: 40,
@@ -247,7 +247,7 @@ class _RepeatPageState extends State<RepeatPage> {
     );
   }
 
-  // Hata ve Boş Durum Tasarımları (Basitleştirildi)
+
   Widget _buildEmptyState() {
     return Center(
       child: Column(

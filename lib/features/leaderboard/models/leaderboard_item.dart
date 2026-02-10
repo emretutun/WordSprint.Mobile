@@ -3,7 +3,6 @@ class LeaderboardItem {
   final String? name;
   final String? email;
 
-  // biri dolu gelecek:
   final int? daysLearning;
   final int? learnedCount;
 
