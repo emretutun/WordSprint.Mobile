@@ -27,5 +27,5 @@ WordSprint is a vocabulary learning app. This repository contains the Flutter mo
    flutter run
 
 
-YOLO test badge trigger
+
 
