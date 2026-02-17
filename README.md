@@ -25,3 +25,7 @@ WordSprint is a vocabulary learning app. This repository contains the Flutter mo
    ```bash
    flutter pub get
    flutter run
+
+
+YOLO test badge trigger
+
